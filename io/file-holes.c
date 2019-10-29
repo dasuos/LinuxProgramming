@@ -36,7 +36,7 @@ int main(int argc, char *argv[]) {
         if (new == -1)
                 return error("open");
 	
-	//allocate buffer based on old file size
+	//allocate a buffer based on old file size
 	size = lseek(old, 0, SEEK_END);
 	if (size == -1)
 		return error("seek");
