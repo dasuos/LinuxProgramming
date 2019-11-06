@@ -19,7 +19,8 @@ int main(int argc, char *argv[]) {
 	
 	int option, i;
 	int source, destination = -1, source_number = 0;
-	ssize_t size, loaded = 0, written;
+	struct stat status;
+	ssize_t loaded = 0, written;
 	char *sources[MAX_SOURCES];
 
 	while ((option = getopt(argc, argv, ":o:a:")) != -1) {
@@ -52,8 +53,10 @@ int main(int argc, char *argv[]) {
 						return EXIT_FAILURE;
 					}
 					sources[source_number++] = argv[i];
-				} else
+				} else {
 					optind = i;
+					break;
+				}
 			break;
 		case ':':
 			fprintf(
@@ -98,21 +101,18 @@ int main(int argc, char *argv[]) {
 			return error("open");
 		
 		//allocate a buffer based on source size
-		size = lseek(source, 0, SEEK_END);
-		if (size == -1)
-			return error("seek");
-		buffer[i] = malloc(size);
+		if (stat(sources[i], &status) == -1)
+			perror("stat");
+		buffer[i] = malloc(status.st_size);
 		if (buffer[i] == NULL)
 			return error("malloc");
-		if (lseek(source, 0, SEEK_SET) == -1)
-			return error("seek");
 
-		//read a source and store in a buffer
-		if (read(source, buffer[i], size) == -1)
+		//atomically read a source and store in a buffer
+		if (pread(source, buffer[i], status.st_size, 0) == -1)
 			return error("read");
 		iov[i].iov_base = buffer[i];
-		iov[i].iov_len = size;
-		loaded += size;
+		iov[i].iov_len = status.st_size;
+		loaded += status.st_size;
 
 		close(source);
 	}
