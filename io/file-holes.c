@@ -63,7 +63,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	free(buffer);
 	if (close(old) == -1)
 		return error("close");
 	if (close(new) == -1)
