@@ -1,72 +1,102 @@
-#include <sys/stat.h>
-#include <sys/types.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 int error(char *message) {
 	perror(message);
-	return EXIT_FAILURE;
+	exit(EXIT_FAILURE);
+}
+
+int sopen(const char *path, int flags, ... /* mode_t mode */) {
+	
+	va_list arguments;
+	mode_t mode;
+	int descriptor;
+	
+	va_start(arguments, flags);
+		mode = va_arg(arguments, mode_t);
+	va_end(arguments);
+	descriptor =  mode == 0
+		? open(path, flags) : open(path, flags, mode);
+	if (descriptor == -1)
+		error("open");
+	return descriptor;
+}
+
+void sread(int descriptor, void *buffer, size_t count) {
+	if (read(descriptor, buffer, count) == -1)
+		error("read");
+}
+
+void sclose(int descriptor) {
+	if (close(descriptor) == -1)
+		error("close");
+}
+
+ssize_t swrite(int descriptor, const void *buffer, size_t count) {
+	if ((count = write(descriptor, buffer, count)) == -1)
+		error("write");
+	return count;
+}
+
+off_t slseek(int descriptor, off_t offset, int whence) {
+	if ((offset = lseek(descriptor, offset, whence)) == -1)
+		error("lseek");
+	return offset;
+}
+
+void *smalloc(ssize_t size) {
+	
+	void *buffer;
+	
+	if ((buffer = malloc(size)) == NULL)
+		error("malloc");
+	return buffer;
 }
 
 int main(int argc, char *argv[]) {
-	
-	int old, new, flags, i;
-	mode_t permissions;
-	ssize_t size, hole = 0;
-	char *buffer;
-	
+
 	if (argc != 3 || strcmp(argv[1], "--help") == 0) {
                 fprintf(stderr, "Usage: %s old-file new-file\n", argv[0]);
                 return EXIT_FAILURE;
         }
 	
-	flags = O_CREAT | O_WRONLY | O_TRUNC;
-	permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | 
+	int flags = O_CREAT | O_WRONLY | O_TRUNC;
+	mode_t permissions = S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP | 
 		S_IROTH | S_IWOTH;
 	
 	//open an old file and create a new one
-	old = open(argv[1], O_RDONLY);
-	if (old == -1)
-		return error("open");
-	new = open(argv[2], flags, permissions);
-        if (new == -1)
-                return error("open");
+	int old = sopen(argv[1], O_RDONLY);
+	int new = sopen(argv[2], flags, permissions);
 	
 	//allocate a buffer based on old file size
-	size = lseek(old, 0, SEEK_END);
-	if (size == -1)
-		return error("seek");
-	buffer = malloc(size);
-	if (buffer == NULL)
-		return error("malloc");
-	if (lseek(old, 0, SEEK_SET) == -1)
-		return error("seek");
+	ssize_t size = slseek(old, 0, SEEK_END);
+	char *buffer = smalloc(size);
+	slseek(old, 0, SEEK_SET);
 
 	//copy data and create corresponding holes
-	if (read(old, buffer, size) == -1)
-		return error("read");
-	for (i = 0; i < size; i++) {
+	sread(old, buffer, size);
+	ssize_t hole = 0;
+	for (int i = 0; i < size; i++) {
 		if (buffer[i] == '\0')
 			hole++;
 		else {
 			if (hole) {
-				if (lseek(new, hole, SEEK_CUR) == -1)
-					return error("seek");
+				slseek(new, hole, SEEK_CUR);
 				hole = 0;
 			}
-			if (write(new, &buffer[i], 1) == -1)
-				return error("write");
+			swrite(new, &buffer[i], 1);
 		}
 	}
 
-	if (close(old) == -1)
-		return error("close");
-	if (close(new) == -1)
-		return error("close");
+	sclose(old);
+	sclose(new);
 
 	return EXIT_SUCCESS;
 }
