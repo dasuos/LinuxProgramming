@@ -1,26 +1,73 @@
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <sys/uio.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
 #include <string.h>
+#include <sys/uio.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #define MAX_SOURCES 10
 
 int error(char *message) {
 	perror(message);
-	return EXIT_FAILURE;
+	exit(EXIT_FAILURE);
+}
+
+int sopen(const char *path, int flags, ... /* mode_t mode */) {
+	
+	va_list arguments;
+	mode_t mode;
+	int descriptor;
+
+	va_start(arguments, flags);
+		mode = va_arg(arguments, mode_t);
+	va_end(arguments);
+	descriptor = mode == 0
+		? open(path, flags) : open(path, flags, mode);
+	if (descriptor == -1)
+		error("open");
+	return descriptor;
+}
+
+void spread(int descriptor, void *buffer, size_t count, off_t offset) {
+	if (pread(descriptor, buffer, count, offset) == -1)
+	       error("pread");	
+}
+
+ssize_t swritev(int descriptor, const struct iovec *iov, int iovcnt) {
+	
+	ssize_t count;
+	
+	if ((count = writev(descriptor, iov, iovcnt)) == -1)
+		error("writev");
+	return count;
+}
+
+void sclose(int descriptor) {
+	if (close(descriptor) == -1)
+		error("close");
+}
+
+void sstat(const char *path, struct stat *status) {
+	if (stat(path, status) == -1)
+		error("stat");
+}
+
+void *smalloc(ssize_t size) {
+	
+	void *buffer;
+
+	if ((buffer = malloc(size)) == NULL)
+		error("malloc");
+	return buffer;
 }
 
 int main(int argc, char *argv[]) {
 	
-	int option, i;
-	int source, destination = -1, source_number = 0;
-	struct stat status;
-	ssize_t loaded = 0, written;
+	int option, i, source, destination = -1, source_number = 0;
 	char *sources[MAX_SOURCES];
 
 	while ((option = getopt(argc, argv, ":o:a:")) != -1) {
@@ -28,14 +75,12 @@ int main(int argc, char *argv[]) {
 		case 'o':
 			//set the destination
 			if (optarg[0] != '-') {
-				destination = open(
+				destination = sopen(
 					optarg, 
 					O_CREAT | O_WRONLY | O_APPEND, 
 					S_IRUSR | S_IWUSR | S_IRGRP | 
 					S_IWGRP | S_IROTH | S_IWOTH
 				);
-				if (destination == -1)
-					error("open");
 				break;
 			}
 			fprintf(stderr, "Option -o requires an operand\n");
@@ -91,37 +136,32 @@ int main(int argc, char *argv[]) {
 		return EXIT_FAILURE;
 	}
 
-	struct iovec iov[source_number];
+	struct stat status;
 	char *buffer[source_number];
+	struct iovec iov[source_number];
+	int loaded = 0;
 
 	for (i = 0; i < source_number; i++) {
 
-		source = open(sources[i], O_RDONLY);
-		if (source == -1)
-			return error("open");
+		source = sopen(sources[i], O_RDONLY);
 		
 		//allocate a buffer based on source size
-		if (stat(sources[i], &status) == -1)
-			perror("stat");
-		buffer[i] = malloc(status.st_size);
-		if (buffer[i] == NULL)
-			return error("malloc");
+		sstat(sources[i], &status);
+		buffer[i] = smalloc(status.st_size);
 
 		//atomically read a source and store in a buffer
-		if (pread(source, buffer[i], status.st_size, 0) == -1)
-			return error("read");
+		spread(source, buffer[i], status.st_size, 0);
+		
 		iov[i].iov_base = buffer[i];
 		iov[i].iov_len = status.st_size;
 		loaded += status.st_size;
 
-		close(source);
+		sclose(source);
 	}
 	
 	//write atomically to a destination
-	written = writev(destination, iov, source_number);
+	int written = swritev(destination, iov, source_number);
 
-	if (written == -1)
-		error("writev");
 	if (written < loaded)
 		printf("Written fewer bytes than read\n");
 	printf("Total bytes read: %ld, appended: %ld\n", 

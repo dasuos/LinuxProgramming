@@ -22,7 +22,7 @@ int sopen(const char *path, int flags, ... /* mode_t mode */) {
 	va_start(arguments, flags);
 		mode = va_arg(arguments, mode_t);
 	va_end(arguments);
-	descriptor =  mode == 0
+	descriptor = mode == 0
 		? open(path, flags) : open(path, flags, mode);
 	if (descriptor == -1)
 		error("open");
