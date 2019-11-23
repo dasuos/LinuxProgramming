@@ -38,10 +38,8 @@ void spread(int descriptor, void *buffer, size_t count, off_t offset) {
 }
 
 ssize_t swritev(int descriptor, const struct iovec *iov, int iovcnt) {
-	
-	ssize_t count;
-	
-	if ((count = writev(descriptor, iov, iovcnt)) == -1)
+	ssize_t count = writev(descriptor, iov, iovcnt);
+	if (count  == -1)
 		error("writev");
 	return count;
 }
@@ -56,11 +54,9 @@ void sstat(const char *path, struct stat *status) {
 		error("stat");
 }
 
-void *smalloc(ssize_t size) {
-	
-	void *buffer;
-
-	if ((buffer = malloc(size)) == NULL)
+void *smalloc(size_t size) {
+	void *buffer = malloc(size);
+	if (buffer  == NULL)
 		error("malloc");
 	return buffer;
 }
@@ -160,7 +156,7 @@ int main(int argc, char *argv[]) {
 	}
 	
 	//write atomically to a destination
-	int written = swritev(destination, iov, source_number);
+	ssize_t written = swritev(destination, iov, source_number);
 
 	if (written < loaded)
 		printf("Written fewer bytes than read\n");

@@ -40,22 +40,22 @@ void sclose(int descriptor) {
 }
 
 ssize_t swrite(int descriptor, const void *buffer, size_t count) {
-	if ((count = write(descriptor, buffer, count)) == -1)
+	ssize_t written = write(descriptor, buffer, count);
+	if (written == -1)
 		error("write");
-	return count;
+	return written;
 }
 
 off_t slseek(int descriptor, off_t offset, int whence) {
-	if ((offset = lseek(descriptor, offset, whence)) == -1)
+	offset = lseek(descriptor, offset, whence);
+	if (offset == -1)
 		error("lseek");
 	return offset;
 }
 
-void *smalloc(ssize_t size) {
-	
-	void *buffer;
-	
-	if ((buffer = malloc(size)) == NULL)
+void *smalloc(size_t size) {
+	void *buffer = malloc(size);
+	if (buffer == NULL)
 		error("malloc");
 	return buffer;
 }
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
 
 	//copy data and create corresponding holes
 	sread(old, buffer, size);
-	ssize_t hole = 0;
+	size_t hole = 0;
 	for (int i = 0; i < size; i++) {
 		if (buffer[i] == '\0')
 			hole++;
