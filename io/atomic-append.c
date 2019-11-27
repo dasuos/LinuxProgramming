@@ -19,13 +19,11 @@ int error(char *message) {
 int sopen(const char *path, int flags, ... /* mode_t mode */) {
 	
 	va_list arguments;
-	mode_t mode;
-	int descriptor;
 
 	va_start(arguments, flags);
-		mode = va_arg(arguments, mode_t);
+		mode_t mode = va_arg(arguments, mode_t);
 	va_end(arguments);
-	descriptor = mode == 0
+	int descriptor = mode == 0
 		? open(path, flags) : open(path, flags, mode);
 	if (descriptor == -1)
 		error("open");
@@ -37,9 +35,9 @@ void spread(int descriptor, void *buffer, size_t count, off_t offset) {
 	       error("pread");	
 }
 
-ssize_t swritev(int descriptor, const struct iovec *iov, int iovcnt) {
+size_t swritev(int descriptor, const struct iovec *iov, int iovcnt) {
 	ssize_t count = writev(descriptor, iov, iovcnt);
-	if (count  == -1)
+	if (count == -1)
 		error("writev");
 	return count;
 }
@@ -56,15 +54,18 @@ void sstat(const char *path, struct stat *status) {
 
 void *smalloc(size_t size) {
 	void *buffer = malloc(size);
-	if (buffer  == NULL)
+	if (buffer == NULL)
 		error("malloc");
 	return buffer;
 }
 
 int main(int argc, char *argv[]) {
 	
-	int option, i, source, destination = -1, source_number = 0;
+	int option; 
+	int destination = -1;
+	int source_count = 0;
 	char *sources[MAX_SOURCES];
+	int i;
 
 	while ((option = getopt(argc, argv, ":o:a:")) != -1) {
 		switch (option) {
@@ -85,7 +86,7 @@ int main(int argc, char *argv[]) {
 			//set the sources
 			for (i = optind - 1; i < argc; i++)
 				if (argv[i][0] != '-') {
-					if (source_number > MAX_SOURCES) {
+					if (source_count > MAX_SOURCES) {
 						fprintf(
 							stderr,
 							"Maximum amount of files to append is %d\n",
@@ -93,7 +94,7 @@ int main(int argc, char *argv[]) {
 						);
 						return EXIT_FAILURE;
 					}
-					sources[source_number++] = argv[i];
+					sources[source_count++] = argv[i];
 				} else {
 					optind = i;
 					break;
@@ -123,7 +124,7 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	if (destination == -1 || source_number == 0) {
+	if (destination == -1 || source_count == 0) {
 		fprintf(
 			stderr,
 			"Usage: %s -o destination -a source1 source2 ...\n",
@@ -131,13 +132,14 @@ int main(int argc, char *argv[]) {
 		);
 		return EXIT_FAILURE;
 	}
-
+	
+	int source;
 	struct stat status;
-	char *buffer[source_number];
-	struct iovec iov[source_number];
-	int loaded = 0;
+	char *buffer[source_count];
+	struct iovec iov[source_count];
+	int bytes_read = 0;
 
-	for (i = 0; i < source_number; i++) {
+	for (i = 0; i < source_count; i++) {
 
 		source = sopen(sources[i], O_RDONLY);
 		
@@ -150,18 +152,18 @@ int main(int argc, char *argv[]) {
 		
 		iov[i].iov_base = buffer[i];
 		iov[i].iov_len = status.st_size;
-		loaded += status.st_size;
+		bytes_read += status.st_size;
 
 		sclose(source);
 	}
 	
 	//write atomically to a destination
-	ssize_t written = swritev(destination, iov, source_number);
+	ssize_t bytes_written = swritev(destination, iov, source_count);
 
-	if (written < loaded)
+	if (bytes_written < bytes_read)
 		printf("Written fewer bytes than read\n");
 	printf("Total bytes read: %ld, appended: %ld\n", 
-		(long) loaded, (long) written);
+		(long) bytes_read, (long) bytes_written);
 
 	return EXIT_SUCCESS;
 }

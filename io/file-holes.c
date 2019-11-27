@@ -16,13 +16,11 @@ int error(char *message) {
 int sopen(const char *path, int flags, ... /* mode_t mode */) {
 	
 	va_list arguments;
-	mode_t mode;
-	int descriptor;
 	
 	va_start(arguments, flags);
-		mode = va_arg(arguments, mode_t);
+		mode_t mode = va_arg(arguments, mode_t);
 	va_end(arguments);
-	descriptor = mode == 0
+	int descriptor = mode == 0
 		? open(path, flags) : open(path, flags, mode);
 	if (descriptor == -1)
 		error("open");
@@ -39,7 +37,7 @@ void sclose(int descriptor) {
 		error("close");
 }
 
-ssize_t swrite(int descriptor, const void *buffer, size_t count) {
+size_t swrite(int descriptor, const void *buffer, size_t count) {
 	ssize_t written = write(descriptor, buffer, count);
 	if (written == -1)
 		error("write");
