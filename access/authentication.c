@@ -56,7 +56,7 @@ struct spwd *shadow_password(char *username){
 	//retrieve the shadow password record in /etc/shadow
 	struct spwd *record = getspnam(username);
 	if (record == NULL && errno == EACCES) {
-		fprintf(stderr, "No permission to read shadow password file");
+		fprintf(stderr, "No permission to read shadow password file\n");
 		exit(EXIT_FAILURE);
 	}
 	return record;
