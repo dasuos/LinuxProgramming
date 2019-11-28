@@ -21,7 +21,6 @@ char *read_username() {
 	long limit = sysconf(_SC_LOGIN_NAME_MAX);
 	if (limit == -1)
 		limit = 256;
-
 	char *username = malloc(limit);
 	if (username == NULL)
 		error("malloc");
@@ -64,18 +63,16 @@ struct spwd *shadow_password(char *username){
 
 bool authenticated(struct passwd *user_account, struct spwd *shadow_password) {
 	
+	//if there is a shadow password record
 	if (shadow_password != NULL) {
-
 		//no password is required
 		if (strcmp(shadow_password->sp_pwdp, "*") == 0)
 			return true;
-
 		//the account is locked
 		if (strcmp(shadow_password->sp_pwdp, "!") == 0 || strcmp(shadow_password->sp_pwdp, "!!") == 0) {
 			fprintf(stderr, "The account is locked\n");
 			exit(EXIT_FAILURE);
 		}
-
 		user_account->pw_passwd = shadow_password->sp_pwdp;
 	}
 
@@ -88,7 +85,6 @@ bool authenticated(struct passwd *user_account, struct spwd *shadow_password) {
 	char *encrypted_password = crypt(password, user_account->pw_passwd);
 	for (char *p = password; *p != '\0'; )
 		*p++ = '\0';
-
 	if (encrypted_password == NULL)
 		error("crypt");
 
