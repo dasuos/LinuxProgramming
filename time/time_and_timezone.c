@@ -19,7 +19,7 @@ void sgettimeofday(struct timeval *tv) {
 struct tm *slocaltime() {
 	time_t seconds = time(NULL);
 	if (seconds == -1)
-		perror("time");
+		error("time");
 	struct tm *local_time = localtime(&seconds);
 	if (local_time == NULL)
 		error("localtime");
@@ -64,7 +64,7 @@ int main(int argc, char *argv[]) {
 		case 't':
 			ssetenv("TZ", optarg, 1);
 			printf(
-				"Timezone time: %s",
+				"Time zone time: %s",
 				sasctime(slocaltime())
 			);
 			return EXIT_SUCCESS;
