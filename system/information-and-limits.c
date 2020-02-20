@@ -16,7 +16,7 @@ long limit(int name) {
 	errno = 0;
 
 	if (errno != 0)
-		perror("sysconf");
+		error("sysconf");
 	return limit;
 }
 
@@ -25,7 +25,7 @@ struct utsname information() {
 	struct utsname uts;
 
 	if (uname(&uts) == -1)
-		perror("uname");
+		error("uname");
 	return uts;
 }
 
