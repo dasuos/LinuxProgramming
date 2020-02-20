@@ -12,8 +12,8 @@ int error(char *message) {
 
 long limit(int name) {
 	
-	long limit = sysconf(name);
 	errno = 0;
+	long limit = sysconf(name);
 
 	if (errno != 0)
 		error("sysconf");
