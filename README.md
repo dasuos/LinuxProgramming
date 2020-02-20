@@ -15,3 +15,8 @@ Demonstration of the Linux programming interface
 ## Time - time
 **time_and_timezone.c**
 - Program displaying calendar time in seconds and microseconds since Epoch, local time or current time in time zone specified in argument (example: ":Pacific/Auckland"), demonstration of gettimeofday(), time(), localtime(), asctime() and setenv() functions
+
+## System - system
+**information-and-limits.c**
+- Program displaying system information and limits
+
