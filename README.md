@@ -20,3 +20,7 @@ Demonstration of the Linux programming interface
 **information-and-limits.c**
 - Program displaying system information and limits
 
+## File - file
+**file-attributes.c**
+- Program demonstrating system calls chmod() for changing file permissions and ioctl() with FS_IOC_SETFLAGS flag (equivalent to chattr command) for changing file i-node flags
+
