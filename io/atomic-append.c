@@ -11,7 +11,7 @@
 
 #define MAX_SOURCES 10
 
-int error(char *message) {
+void error(char *message) {
 	perror(message);
 	exit(EXIT_FAILURE);
 }

@@ -6,7 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 
-int error(char *message) {
+void error(char *message) {
 	perror(message);
 	exit(EXIT_FAILURE);
 }
