@@ -42,6 +42,12 @@ int main(int argc, char *argv[]) {
 		case 'l': {
 			
 			DIR *directory_stream = opendir(".");
+
+			if (directory_stream == NULL) {
+				fprintf(stderr, "Opening current directory failed");
+				exit(EXIT_FAILURE);
+			}
+
 			struct dirent *entry;
 
 			//print directory content
@@ -58,6 +64,11 @@ int main(int argc, char *argv[]) {
 				printf("%s\n", entry->d_name);
 			}
 			break;
+
+			if (errno != 0)
+				error("readdir");
+			if (closedir(directory_stream) == -1)
+				error("closedir");
 		}
 		}
 
