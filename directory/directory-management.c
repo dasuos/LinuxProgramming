@@ -63,15 +63,36 @@ int main(int argc, char *argv[]) {
 
 				printf("%s\n", entry->d_name);
 			}
-			break;
 
 			if (errno != 0)
 				error("readdir");
 			if (closedir(directory_stream) == -1)
 				error("closedir");
-		}
-		}
 
+			exit(EXIT_FAILURE);
+		}
+		case ':':
+			fprintf(
+				stderr,
+				"Option -%c requires an operand\n",
+				optopt
+			);
+			exit(EXIT_FAILURE);
+		case '?':
+			fprintf(
+				stderr,
+				"Unrecognized option -%c\n",
+				optopt
+			);
+			exit(EXIT_FAILURE);
+		default:
+			fprintf(
+				stderr,
+				"Usage: %s [-m dir | -r dir | -l]",
+				argv[0]
+			);
+			exit(EXIT_FAILURE);
+		}
 	}
 }
 
