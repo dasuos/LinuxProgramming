@@ -12,7 +12,6 @@
 #include <unistd.h>
 
 #define BUFFER_LENGTH (10 * (sizeof(struct inotify_event) + NAME_MAX + 1))
-#define WATCH_COUNT 8192
 
 static int directory_count = 0;
 static char **directories = NULL;
@@ -32,7 +31,10 @@ static int traverse_directories(
 ) {
 	
 	//skip if not directory
-	if (!S_ISDIR(information->st_mode))
+	if (
+		!S_ISDIR(information->st_mode) ||
+		strcmp(&path[ftw->base], ".") == 0
+	)
 		return 0;
 
 	//allocate memory for directory path
@@ -53,23 +55,65 @@ static int traverse_directories(
 	return 0;
 }
 
+void log_event(char *path, struct inotify_event *event) {
+
+	char *log;
+
+	//set log message by event type
+	if (event->mask & IN_ACCESS)
+		log = "IN_ACCESS - file was accessed";
+	else if (event->mask & IN_ATTRIB)
+		log = "IN_ATTRIB - file metadata changed";
+	else if (event->mask & IN_CLOSE_WRITE)
+		log = "IN_CLOSE_WRITE - file opened for writing was closed";
+	else if (event->mask & IN_CLOSE_NOWRITE)
+		log = "IN_CLOSE_NOWRITE - file opened read-only was closed";
+	else if (event->mask & IN_CREATE)
+		log = "IN_CREATE - file/directory created";
+	else if (event->mask & IN_DELETE)
+		log = "IN_DELETE - file/directory deleted";
+	else if (event->mask & IN_DELETE_SELF)
+		log = "IN_DELETE_SELF - file/directory was itself deleted";
+	else if (event->mask & IN_MODIFY)
+		log = "IN_MODIFY - file was modified";
+	else if (event->mask & IN_MOVE_SELF)
+		log = "IN_MOVE_SELF - file/directory was itself moved";
+	else if (event->mask & IN_MOVED_FROM)
+		log = "IN_MOVED_FROM - file moved out of directory";
+	else if (event->mask & IN_MOVED_TO)
+		log = "IN_MOVED_TO - file moved into directory";
+	else if (event->mask & IN_OPEN)
+		log = "IN_OPEN - file was opened";
+
+	//format and save log message
+	FILE *log_file = fopen(path, "a");
+	fprintf(
+		log_file, 
+		"%s wd = %d", 
+		event->mask & IN_ISDIR ? "[DIRECTORY]" : "[FILE]",
+		event->wd
+	);
+	if (event->len)
+		fprintf(log_file, ", name = %s", event->name);
+	fprintf(log_file, ": %s\n", log);
+	fclose(log_file);
+}
+
 int main(int argc, char *argv[]) {
 
 	int watch;
 	char buffer[BUFFER_LENGTH] __attribute__((aligned(8)));
 	ssize_t bytes;
-	char *p;
 	struct inotify_event *event;
+	size_t logged = 0;
 
-	if (argc != 3 || strcmp(argv[1], "--help") == 0) {
-		fprintf(stderr, "Usage: %s file seconds\n", argv[0]);
+	if (argc != 2 || strcmp(argv[1], "--help") == 0) {
+		fprintf(stderr, "Usage: %s file \n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	//opening log file and setting countdown
-	FILE *log = fopen(argv[1], "a");
-	time_t countdown = time(NULL) + atoi(argv[2]);
-	
+	char *log_file = argv[1];	
+
 	//travese directories and add them into list
 	nftw(".", traverse_directories, 20, 0);
 
@@ -90,28 +134,29 @@ int main(int argc, char *argv[]) {
 		printf("Directory %s added into watch list\n", directories[i]);
 	}
 
-	//read directory events
-	while (time(NULL) < countdown) {
+	for (;;) {		
+		logged = 0;
+
+		//read directory events 
 		bytes = read(inotify, buffer, BUFFER_LENGTH);
+		
 		if (bytes == 0) {
 			fprintf(stderr, "Reading from inotify failed");
 			exit(EXIT_FAILURE);
 		}
 		if (bytes == -1)
 			error("read");
-		
-		//process and print directory events
-		for (p = buffer; p < buffer + bytes; ) {
-			event = (struct inotify_event *) p;
-			
-			//log event
-			fwrite("abc", 1, sizeof("abc"), log);
 
-			p += sizeof(struct inotify_event) + event->len;
+		//process and log directory events
+		while (bytes > logged) {
+
+			event = (struct inotify_event *) &buffer[logged];
+			log_event(log_file, event);
+
+			logged += sizeof(struct inotify_event) + event->len;
 		}
-	}
-	
-	fclose(log);
+	}	
+
 	exit(EXIT_SUCCESS);
 }
 
