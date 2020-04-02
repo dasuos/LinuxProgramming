@@ -29,7 +29,7 @@ static int traverse_directories(
 	int type,
 	struct FTW *ftw
 ) {
-	
+
 	//skip if not directory
 	if (
 		!S_ISDIR(information->st_mode) ||
@@ -55,6 +55,17 @@ static int traverse_directories(
 	return 0;
 }
 
+void add_directory_watches(int inotify) {
+	
+	//add directories for all events
+	for (int i = 0; directory_count > i; i++) {
+		if (inotify_add_watch(inotify, directories[i], IN_ALL_EVENTS) == -1)
+			error("inotify_add_watch");
+		printf("Directory %s added into watch list\n", directories[i]);
+	}
+	printf("\n");
+}
+
 void log_event(char *path, struct inotify_event *event) {
 
 	char *log;
@@ -74,6 +85,8 @@ void log_event(char *path, struct inotify_event *event) {
 		log = "IN_DELETE - file/directory deleted";
 	else if (event->mask & IN_DELETE_SELF)
 		log = "IN_DELETE_SELF - file/directory was itself deleted";
+	else if (event->mask & IN_IGNORED)
+		log = "IN_IGNORED - watch was removed by application or by kernel";
 	else if (event->mask & IN_MODIFY)
 		log = "IN_MODIFY - file was modified";
 	else if (event->mask & IN_MOVE_SELF)
@@ -84,6 +97,10 @@ void log_event(char *path, struct inotify_event *event) {
 		log = "IN_MOVED_TO - file moved into directory";
 	else if (event->mask & IN_OPEN)
 		log = "IN_OPEN - file was opened";
+	else if (event->mask & IN_Q_OVERFLOW)
+		log = "IN_Q_OVERFLOW - overflow on event queue";
+	else if (event->mask & IN_UNMOUNT)
+		log = "IN_UNMOUNT - file system containing object was unmounted";
 
 	//format and save log message
 	FILE *log_file = fopen(path, "a");
@@ -93,6 +110,8 @@ void log_event(char *path, struct inotify_event *event) {
 		event->mask & IN_ISDIR ? "[DIRECTORY]" : "[FILE]",
 		event->wd
 	);
+	if (event->cookie)
+		fprintf(log_file, ", cookie = %d", event->cookie);
 	if (event->len)
 		fprintf(log_file, ", name = %s", event->name);
 	fprintf(log_file, ": %s\n", log);
@@ -101,7 +120,6 @@ void log_event(char *path, struct inotify_event *event) {
 
 int main(int argc, char *argv[]) {
 
-	int watch;
 	char buffer[BUFFER_LENGTH] __attribute__((aligned(8)));
 	ssize_t bytes;
 	struct inotify_event *event;
@@ -114,7 +132,7 @@ int main(int argc, char *argv[]) {
 
 	char *log_file = argv[1];	
 
-	//travese directories and add them into list
+	//walk directories and add them into list
 	nftw(".", traverse_directories, 20, 0);
 
 	//create inotify instance
@@ -123,16 +141,7 @@ int main(int argc, char *argv[]) {
 		error("inotify_init");
 
 	//add directories for all events
-	for (int i = 0; directory_count > i; i++) {
-		watch = inotify_add_watch(
-			inotify,
-			directories[i],
-			IN_ALL_EVENTS
-		);
-		if (watch == -1)
-			error("inotify_add_watch");
-		printf("Directory %s added into watch list\n", directories[i]);
-	}
+	add_directory_watches(inotify);
 
 	for (;;) {		
 		logged = 0;
@@ -152,6 +161,23 @@ int main(int argc, char *argv[]) {
 
 			event = (struct inotify_event *) &buffer[logged];
 			log_event(log_file, event);
+			
+			/*if new subdirectory is created, walk repeatedly 
+			 * directories and readd them for all events*/
+			if (
+				(event->mask & IN_ISDIR) &&
+				((event->mask & IN_CREATE) || (event->mask & IN_DELETE))
+			) {
+				
+				/*erase necessary variables for
+				 * directory tree walk*/
+				directory_count = 0;
+				directories = NULL;
+				directory_size = 0;
+
+				nftw(".", traverse_directories, 20, 0);
+				add_directory_watches(inotify);
+			}
 
 			logged += sizeof(struct inotify_event) + event->len;
 		}
