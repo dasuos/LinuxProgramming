@@ -27,3 +27,9 @@ Demonstration of the Linux programming interface
 ## Directory - directory
 **directory-management.c**
 - Program demonstrating mkdir() and rmdir() commands and directory iteration
+
+## Monitoring - monitoring
+**monitoring.c**
+- Program that recursively monitors and logs all file/directory events using tree walking function nftw() and inotify
+API
+
