@@ -53,16 +53,17 @@ int main(int argc, char *argv[]) {
 	int option;
 	int argument_count = 0;
 	char *arguments[3];
+	int i;
 
 	int signal;
 	siginfo_t signal_info;
 	sigset_t signal_set;
 
-	while ((option = getopt(argc, argv, ":s:l")) != -1)
+	while ((option = getopt(argc, argv, ":s:r:l")) != -1)
 		switch (option) {
 		case 's': {
 
-			for (int i = optind - 1; i < argc; i++)
+			for (i = optind - 1; i < optind + 1; i++)
 				if (argv[i][0] != '-')
 					arguments[argument_count++] = argv[i];
 				else {
@@ -70,12 +71,33 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 
-			//send a process to another process
+			//send standard process to another process
 			if (kill(atoi(arguments[0]), atoi(arguments[1])) == -1)
 				error("kill");
-			printf("Signal has been successfully sended\n");
+			printf("Standard signal has been sent successfully\n");
 			
 			exit(EXIT_SUCCESS);
+		}
+		case 'r': {
+			
+			for (i = optind - 1; i < optind + 2; i++)
+				if (argv[i][0] != '-')
+					arguments[argument_count++] = argv[i];
+				else {
+					optind = i;
+					break;
+				}
+
+			//send realtime process to another process
+			union sigval value;
+			value.sival_int = atoi(arguments[2]);
+
+			if (sigqueue(atoi(arguments[0]), atoi(arguments[1]), value) == -1)
+				error("sigqueue");
+			printf("Realtime signal has been sent successfully\n");
+			
+			exit(EXIT_SUCCESS);
+			
 		}
 		case 'l': {
 
