@@ -162,15 +162,19 @@ int main(int argc, char *argv[]) {
 			event = (struct inotify_event *) &buffer[logged];
 			log_event(log_file, event);
 			
-			/*if new subdirectory is created, walk repeatedly 
-			 * directories and readd them for all events*/
+			/* 
+			 * if new subdirectory is created, walk repeatedly 
+			 * directories and readd them for all events
+			 */
 			if (
 				(event->mask & IN_ISDIR) &&
 				((event->mask & IN_CREATE) || (event->mask & IN_DELETE))
 			) {
 				
-				/*erase necessary variables for
-				 * directory tree walk*/
+				/* 
+				 * erase necessary variables for
+				 * directory tree walk
+				 */
 				directory_count = 0;
 				directories = NULL;
 				directory_size = 0;
