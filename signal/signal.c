@@ -8,8 +8,19 @@
 #include <time.h>
 #include <unistd.h>
 
+#define MAX_ARGUMENTS 3
+
 void error(char *message) {
 	perror(message);
+	exit(EXIT_FAILURE);
+}
+
+void display_usage(char *argv[]) {
+	fprintf(
+		stderr,
+		"Usage: %s -l | -s pid sig | -r pid sig value\n",
+		argv[0]
+	);
 	exit(EXIT_FAILURE);
 }
 
@@ -57,7 +68,7 @@ int main(int argc, char *argv[]) {
 
 	int option;
 	int argument_count = 0;
-	char *arguments[3];
+	char *arguments[MAX_ARGUMENTS];
 	int i;
 
 	int signal;
@@ -67,6 +78,9 @@ int main(int argc, char *argv[]) {
 	while ((option = getopt(argc, argv, ":s:r:l")) != -1)
 		switch (option) {
 		case 's': {
+
+			if (argc != 4)
+				display_usage(argv);
 
 			for (i = optind - 1; i < optind + 1; i++)
 				if (argv[i][0] != '-')
@@ -84,7 +98,10 @@ int main(int argc, char *argv[]) {
 			exit(EXIT_SUCCESS);
 		}
 		case 'r': {
-			
+
+			if (argc != 5)
+				display_usage(argv);
+
 			for (i = optind - 1; i < optind + 2; i++)
 				if (argv[i][0] != '-')
 					arguments[argument_count++] = argv[i];
@@ -155,12 +172,7 @@ int main(int argc, char *argv[]) {
 			);
 			exit(EXIT_FAILURE);
 		default:
-			fprintf(
-				stderr,
-				"Usage: %s -l | -s pid sig | -r pid sig value\n",
-				argv[0]
-			);
-			exit(EXIT_FAILURE);
+			display_usage(argv);
 		}
 }
 

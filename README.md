@@ -33,3 +33,7 @@ Demonstration of the Linux programming interface
 - Program that recursively monitors and logs all file/directory events using tree walking function nftw() and inotify
 API
 
+## Signal - signal
+**signal.c**
+- Program that fetches and sends pending standard/realtime signals using sigfillset(), sigprocmask(), sigwaitinfo(), sigqueue() and kil()
+
