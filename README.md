@@ -35,5 +35,5 @@ API
 
 ## Signal - signal
 **signal.c**
-- Program that fetches and sends pending standard/realtime signals using sigfillset(), sigprocmask(), sigwaitinfo(), sigqueue() and kil()
+- Program that fetches and sends pending standard/realtime signals using sigfillset(), sigprocmask(), sigwaitinfo(), sigqueue() and kill()
 
