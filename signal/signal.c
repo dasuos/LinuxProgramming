@@ -15,35 +15,40 @@ void error(char *message) {
 
 char *signal_description(int signal, int code) {
 
-	if (signal == SIGBUS)
+	switch (signal) {
+	case SIGBUS:
 		return "[SIGBUS] memory access errors";
-	else if (signal == SIGCHLD)
+	case SIGCHLD:
 		return "[SGCHLD] child process terminates";
-	else if (signal == SIGFPE)
+	case SIGFPE:
 		return "[SIGFPE] arithmetic error occurs";
-	else if (signal == SIGILL)
+	case SIGILL:
 		return "[SIGILL] illegal machine-language instruction";
-	else if (signal == SIGSEGV)
+	case SIGSEGV:
 		return "[SIGSEGV] invalid memory reference";
-	else if (signal == SIGTRAP)
+	case SIGTRAP:
 		return "[SIGTRAP] debugger breakpoints";
-	else if (code == SI_ASYNCIO)
+	}
+
+	switch (code) {
+	case SI_ASYNCIO:
 		return "[SI_ASYNCIO] completion of an asynchronous I/O";
-	else if (code == SI_KERNEL)
+	case SI_KERNEL:
 		return "[SI_KERNEL] sent by the kernel";
-	else if (code == SI_MESGQ)
+	case SI_MESGQ:
 		return "[SI_MESGQ] message arrival on POSIX message queue";
-	else if (code == SI_QUEUE)
+	case SI_QUEUE:
 		return "[SI_QUEUE] realtime signal";
-	else if (code == SI_SIGIO)
+	case SI_SIGIO:
 		return "[SI_SIGIO] SIGIO signal";
-	else if (code == SI_TIMER)
+	case SI_TIMER:
 		return "[SI_TIMER] expiration of a POSIX timer";
-	else if (code == SI_TKILL)
+	case SI_TKILL:
 		return "[SI_TKILL] user process via tkill() or tgkill()";
-	else if (code == SI_USER)
+	case SI_USER:
 		return "[SI_USER] user proccess via kill()";
-	
+	}
+
 	fprintf(stderr, "Unrecognized signal fetched");
 	exit(EXIT_FAILURE);
 }
