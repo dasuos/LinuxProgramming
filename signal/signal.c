@@ -97,7 +97,6 @@ int main(int argc, char *argv[]) {
 			printf("Realtime signal has been sent successfully\n");
 			
 			exit(EXIT_SUCCESS);
-			
 		}
 		case 'l': {
 
