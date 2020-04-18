@@ -90,7 +90,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 
-			//send standard process to another process
+			//send standard signal to another process
 			if (kill(atoi(arguments[0]), atoi(arguments[1])) == -1)
 				error("kill");
 			printf("Standard signal has been sent successfully\n");
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 
-			//send realtime process to another process
+			//send realtime signal to another process
 			union sigval value;
 			value.sival_int = atoi(arguments[2]);
 
