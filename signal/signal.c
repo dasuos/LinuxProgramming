@@ -24,6 +24,18 @@ void display_usage(char *argv[]) {
 	exit(EXIT_FAILURE);
 }
 
+pid_t existing_process(pid_t number) {
+	if (kill(number, 0) == -1 && errno == ESRCH) {
+		fprintf(
+			stderr,
+			"Process %d does not exist\n",
+			number
+		);
+		exit(EXIT_FAILURE);
+	}
+	return number;
+}
+
 char *signal_description(int signal, int code) {
 
 	switch (signal) {
@@ -90,8 +102,20 @@ int main(int argc, char *argv[]) {
 					break;
 				}
 
+			signal = atoi(arguments[1]);
+			
+			if (signal < 1 || signal > NSIG) {
+				fprintf(
+					stderr, 
+					"Standard signal number %d exceeds allowed range from 1 to %d\n",
+					signal,
+					NSIG
+				);
+				exit(EXIT_FAILURE);
+			}
+
 			//send standard signal to another process
-			if (kill(atoi(arguments[0]), atoi(arguments[1])) == -1)
+			if (kill(existing_process(atoi(arguments[0])), signal) == -1)
 				error("kill");
 			printf("Standard signal has been sent successfully\n");
 			
@@ -109,12 +133,26 @@ int main(int argc, char *argv[]) {
 					optind = i;
 					break;
 				}
+			
+			signal = atoi(arguments[1]);
 
+			if (signal < SIGRTMIN || signal > SIGRTMAX) {
+				fprintf(
+					stderr,
+					"Realtime signal number %d exceeds allowed range from %d to %d\n",
+					signal,
+					SIGRTMIN,
+					SIGRTMAX
+					
+				);
+				exit(EXIT_FAILURE);
+			}
+			
 			//send realtime signal to another process
 			union sigval value;
 			value.sival_int = atoi(arguments[2]);
 
-			if (sigqueue(atoi(arguments[0]), atoi(arguments[1]), value) == -1)
+			if (sigqueue(existing_process(atoi(arguments[0])), signal, value) == -1)
 				error("sigqueue");
 			printf("Realtime signal has been sent successfully\n");
 			
