@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 	if (argc > 2) {
 
 		//set optionable interval
-		char *interval = strdup(argv[2]);
+		char *interval = strdup(argv[3]);
 
 		p = strchr(interval, '.');
 		if (p != NULL)
