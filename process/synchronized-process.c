@@ -21,9 +21,6 @@ int main(int argc, char *argv[]) {
 	sigset_t block_mask, old_mask, empty_mask;
 	struct sigaction sa;
 
-	//disable buffering to immediately print output
-	setbuf(stdout, NULL);
-
 	//block the signal
 	sigemptyset(&block_mask);
 	sigaddset(&block_mask, SYNC_SIGNAL);
