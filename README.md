@@ -35,10 +35,14 @@ API
 
 ## Signal - signal
 **signal.c**
-- Program that fetches and sends pending standard/realtime signals using sigfillset(), sigprocmask(), sigwaitinfo(), sigqueue() and kill()
+- Program that fetches and sends pending standard/realtime signals using sigprocmask(), sigwaitinfo(), sigqueue() and kill()
 
 ## Timer - timer
 **timerfd.c**
 - Program demonstrating timer using file descriptor with Linux-specific timerfd
  facility
+
+## Process - process
+**synchronized-process.c**
+- Program demonstrating process synchronization using signals to avoid race conditions with fork(), sigprocmask(), sigaction() and sigsuspend()
 
