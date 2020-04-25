@@ -53,42 +53,43 @@ int main(int argc, char *argv[]) {
 				(long) time.tv_sec,
 				(long) time.tv_usec
 			);
-			return EXIT_SUCCESS;
+			exit(EXIT_SUCCESS);
 		}
 		case 'l':
 			printf(
 				"Local time: %s",
 				sasctime(slocaltime())
 			);
-			return EXIT_SUCCESS;
+			exit(EXIT_SUCCESS);
 		case 't':
 			ssetenv("TZ", optarg, 1);
 			printf(
 				"Time zone time: %s",
 				sasctime(slocaltime())
 			);
-			return EXIT_SUCCESS;
+			exit(EXIT_SUCCESS);
 		case ':':
 			fprintf(
 				stderr,
 				"Option -%c requires an operand\n",
 				optopt
 			);
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		case '?':
 			fprintf(
 				stderr,
 				"Unrecognized option -%c\n",
 				optopt
 			);
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		default:
 			fprintf(
 				stderr,
 				"Usage: %s [-u | -l | -t timezone]\n",
 				argv[0]
 			);
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		}
 	}
 }
+

@@ -89,6 +89,6 @@ int main(int argc, char *argv[]) {
 		printf("Domain name: %s\n", uts.domainame);
 	#endif	
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 

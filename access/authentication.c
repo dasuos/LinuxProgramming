@@ -100,6 +100,6 @@ int main(int argc, char *argv[]) {
 	else
 		printf("Incorrect password\n");
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 

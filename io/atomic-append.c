@@ -81,7 +81,7 @@ int main(int argc, char *argv[]) {
 				break;
 			}
 			fprintf(stderr, "Option -o requires an operand\n");
-                        return EXIT_FAILURE;
+                        exit(EXIT_FAILURE);
 		case 'a':
 			//set the sources
 			for (i = optind - 1; i < argc; i++)
@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 							"Maximum amount of files to append is %d\n",
 							MAX_SOURCES
 						);
-						return EXIT_FAILURE;
+						exit(EXIT_FAILURE);
 					}
 					sources[source_count++] = argv[i];
 				} else {
@@ -106,21 +106,21 @@ int main(int argc, char *argv[]) {
 				"Option -%c requires an operand\n", 
 				optopt
 			);
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		case '?':
 			fprintf(
 				stderr, 
 				"Unrecognized option -%c\n",
 				optopt
 			);
-			return EXIT_FAILURE;	
+			exit(EXIT_FAILURE);	
 		default:
 			fprintf(
 				stderr, 
 				"Usage: %s -o destination -a source1 source2 ...\n", 
 				argv[0]
 			);
-			return EXIT_FAILURE;
+			exit(EXIT_FAILURE);
 		}
 	}
 
@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
 			"Usage: %s -o destination -a source1 source2 ...\n",
 			argv[0]
 		);
-		return EXIT_FAILURE;
+		exit(EXIT_FAILURE);
 	}
 	
 	int source;
@@ -165,6 +165,6 @@ int main(int argc, char *argv[]) {
 	printf("Total bytes read: %ld, appended: %ld\n", 
 		(long) bytes_read, (long) bytes_written);
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 

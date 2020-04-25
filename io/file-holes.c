@@ -62,7 +62,7 @@ int main(int argc, char *argv[]) {
 
 	if (argc != 3 || strcmp(argv[1], "--help") == 0) {
                 fprintf(stderr, "Usage: %s old-file new-file\n", argv[0]);
-                return EXIT_FAILURE;
+                exit(EXIT_FAILURE);
         }
 	
 	int flags = O_CREAT | O_WRONLY | O_TRUNC;
@@ -96,6 +96,6 @@ int main(int argc, char *argv[]) {
 	sclose(old);
 	sclose(new);
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 

@@ -184,5 +184,7 @@ int main(int argc, char *argv[]) {
 		error("open");
 	if (ioctl(file_descriptor, FS_IOC_SETFLAGS, &flags) == -1)
 		error("ioctl");
-	return EXIT_SUCCESS;
+
+	exit(EXIT_SUCCESS);
 }
+
