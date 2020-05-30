@@ -6,7 +6,6 @@
 #include <string.h>
 #include <unistd.h>
 
-static pthread_cond_t cond_variable = PTHREAD_COND_INITIALIZER;
 static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static volatile int shared_loops = 0;
@@ -98,3 +97,4 @@ int main(int argc, char *argv[]) {
 
 	return EXIT_SUCCESS;
 }
+
