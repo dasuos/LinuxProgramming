@@ -56,3 +56,7 @@ API
 **cond_variable.c**
 - Program demonstrating condition variables and signaling changes of states between threads using pthread_cond_signal() and pthread_cond_wait()
 
+**cancellation.c**
+- Program cancelling thread and calling cleanup handler using pthread_cancel(),
+ pthread_cleanup_push() and pthread_cleanup_pop()
+

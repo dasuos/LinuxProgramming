@@ -131,6 +131,6 @@ int main(int argc, char *argv[]) {
 			error("pthread_mutex_unlock");
 	}
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 

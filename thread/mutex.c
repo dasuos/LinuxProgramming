@@ -95,6 +95,6 @@ int main(int argc, char *argv[]) {
 
 	printf("Loop count: %d\n", shared_loops);
 
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
 
